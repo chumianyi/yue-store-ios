@@ -1,240 +1,225 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "unzip.h"
-#include "ioapi.h"
+#include <zlib.h>
+#include "zip.h"
 
 #define LOCAL_HEADER_MAGIC 0x04034b50
 #define CENTRAL_HEADER_MAGIC 0x02014b50
 #define END_CENTRAL_MAGIC 0x06054b50
 
+typedef struct unz_entry_s {
+    uint32_t offset;
+    uint32_t comp_size;
+    uint32_t uncomp_size;
+    uint32_t crc32;
+    uint16_t method;
+    char *filename;
+    uint16_t filename_len;
+    struct unz_entry_s *next;
+} unz_entry;
+
 typedef struct {
-    zlib_filefunc_def filefunc;
-    voidpf filestream;
-    uLong central_pos;
-    uLong central_size;
-    uLong number_entry;
-    uLong cur_file_ok;
-    uLong cur_pos_incentral;
-    struct {
-        uLong stream_initialised;
-        uInt method;
-        z_stream stream;
-        uLong compressed_size;
-        uLong uncompressed_size;
-        uLong crc;
-        uLong stream_pos;
-        Bytef *read_buffer;
-        uInt read_buffer_size;
-        uLong pos_local_header;
-        char filename[512];
-        uInt filename_len;
-    } file;
+    FILE *fp;
+    unz_entry *entries;
+    unz_entry *cur;
+    int cur_open;
+    z_stream zstr;
+    int zstr_init;
+    uint32_t bytes_left;
+    uint32_t comp_left;
 } unz_internal;
 
-static uInt16 read_uint16(FILE *f) { uInt16 v; fread(&v, 1, 2, f); return v; }
-static uInt32 read_uint32(FILE *f) { uInt32 v; fread(&v, 1, 4, f); return v; }
-
-static int unzGoToNextFile(unzFile file) {
-    unz_internal *s = (unz_internal *)file;
-    if (s->cur_file_ok == 0) return UNZ_END_OF_LIST_OF_FILE;
-    if (s->cur_pos_incentral >= s->central_pos + s->central_size) {
-        s->cur_file_ok = 0;
-        return UNZ_END_OF_LIST_OF_FILE;
-    }
-    FILE *f = (FILE *)s->filestream;
-    fseek(f, s->cur_pos_incentral, SEEK_SET);
-    uInt32 magic = read_uint32(f);
-    if (magic != CENTRAL_HEADER_MAGIC) { s->cur_file_ok = 0; return UNZ_END_OF_LIST_OF_FILE; }
-    fseek(f, 16, SEEK_CUR);
-    uInt32 crc = read_uint32(f);
-    uInt32 csize = read_uint32(f);
-    uInt32 usize = read_uint32(f);
-    uInt16 fnlen = read_uint16(f);
-    uInt16 eflen = read_uint16(f);
-    uInt16 cmlen = read_uint16(f);
-    fseek(f, 8, SEEK_CUR);
-    uInt32 lho = read_uint32(f);
-    if (fnlen > 511) fnlen = 511;
-    fread(s->file.filename, 1, fnlen, f);
-    s->file.filename[fnlen] = '\0';
-    s->file.filename_len = fnlen;
-    s->file.pos_local_header = lho;
-    s->file.method = 0;
-    s->cur_pos_incentral = ftell(f) + eflen + cmlen;
-    s->cur_file_ok = 1;
-    return UNZ_OK;
+static uint16_t read_le16(FILE *fp) {
+    int a = fgetc(fp), b = fgetc(fp);
+    return (uint16_t)(a | (b << 8));
+}
+static uint32_t read_le32(FILE *fp) {
+    int a = fgetc(fp), b = fgetc(fp), c = fgetc(fp), d = fgetc(fp);
+    return (uint32_t)(a | (b << 8) | (c << 16) | (d << 24));
 }
 
-voidp unzOpen(const char *path) {
-    zlib_filefunc_def filefunc;
-    fill_fopen_filefunc(&filefunc);
-    voidpf filestream = ZOPEN(filefunc, path, ZLIB_FILEFUNC_MODE_READ);
-    if (!filestream) return NULL;
-    FILE *f = (FILE *)filestream;
-    fseek(f, 0, SEEK_END);
-    long filelen = ftell(f);
-    if (filelen < 22) { fclose(f); return NULL; }
-    long back = (filelen > 65557) ? 65557 : filelen;
-    fseek(f, filelen - back, SEEK_SET);
-    uByte *buf = (uByte *)malloc(back);
-    fread(buf, 1, back, f);
-    uLong central_pos = 0, central_size = 0, num_entry = 0;
+unzFile unzOpen(const char *path) {
+    unz_internal *u = calloc(1, sizeof(unz_internal));
+    if (!u) return NULL;
+    u->fp = fopen(path, "rb");
+    if (!u->fp) { free(u); return NULL; }
+
+    fseek(u->fp, 0, SEEK_END);
+    long fsize = ftell(u->fp);
+    long search_start = fsize - 65557;
+    if (search_start < 0) search_start = 0;
+    fseek(u->fp, search_start, SEEK_SET);
+    unsigned char buf[65557];
+    size_t read_size = (size_t)(fsize - search_start);
+    fread(buf, 1, read_size, u->fp);
+
+    uint32_t eocd_offset = 0;
     int found = 0;
-    for (long i = back - 22; i >= 0; i--) {
+    for (long i = (long)read_size - 22; i >= 0; i--) {
         if (buf[i] == 0x50 && buf[i+1] == 0x4b && buf[i+2] == 0x05 && buf[i+3] == 0x06) {
-            uLong off = filelen - back + i;
-            fseek(f, off + 10, SEEK_SET);
-            num_entry = read_uint16(f);
-            central_size = read_uint32(f);
-            central_pos = read_uint32(f);
-            found = 1;
-            break;
+            eocd_offset = (uint32_t)(search_start + i);
+            found = 1; break;
         }
     }
-    free(buf);
-    if (!found) { fclose(f); return NULL; }
-    unz_internal *s = (unz_internal *)malloc(sizeof(unz_internal));
-    memset(s, 0, sizeof(*s));
-    s->filefunc = filefunc;
-    s->filestream = filestream;
-    s->central_pos = central_pos;
-    s->central_size = central_size;
-    s->number_entry = num_entry;
-    s->cur_pos_incentral = central_pos;
-    s->cur_file_ok = 1;
-    s->file.read_buffer_size = 16384;
-    s->file.read_buffer = (Bytef *)malloc(s->file.read_buffer_size);
-    unzGoToNextFile((unzFile)s);
-    return (unzFile)s;
-}
+    if (!found) { fclose(u->fp); free(u); return NULL; }
 
-int unzClose(unzFile file) {
-    unz_internal *s = (unz_internal *)file;
-    if (!s) return UNZ_PARAMERROR;
-    if (s->file.stream_initialised) inflateEnd(&s->file.stream);
-    free(s->file.read_buffer);
-    ZCLOSE(s->filefunc, s->filestream);
-    free(s);
-    return UNZ_OK;
+    fseek(u->fp, eocd_offset + 10, SEEK_SET);
+    uint16_t num_entries = read_le16(u->fp);
+    fseek(u->fp, eocd_offset + 16, SEEK_SET);
+    read_le32(u->fp); /* cd_size */
+    uint32_t cd_offset = read_le32(u->fp);
+
+    fseek(u->fp, cd_offset, SEEK_SET);
+    unz_entry *last = NULL;
+    for (uint16_t i = 0; i < num_entries; i++) {
+        uint32_t sig = read_le32(u->fp);
+        if (sig != CENTRAL_HEADER_MAGIC) break;
+        fseek(u->fp, 6, SEEK_CUR);
+        read_le16(u->fp); /* flag */
+        uint16_t method = read_le16(u->fp);
+        fseek(u->fp, 4, SEEK_CUR);
+        uint32_t crc = read_le32(u->fp);
+        uint32_t comp_size = read_le32(u->fp);
+        uint32_t uncomp_size = read_le32(u->fp);
+        uint16_t fn_len = read_le16(u->fp);
+        uint16_t ex_len = read_le16(u->fp);
+        uint16_t cm_len = read_le16(u->fp);
+        fseek(u->fp, 8, SEEK_CUR);
+        uint32_t offset = read_le32(u->fp);
+        char *filename = malloc(fn_len + 1);
+        fread(filename, 1, fn_len, u->fp);
+        filename[fn_len] = 0;
+        fseek(u->fp, ex_len + cm_len, SEEK_CUR);
+        unz_entry *e = calloc(1, sizeof(unz_entry));
+        e->offset = offset; e->comp_size = comp_size; e->uncomp_size = uncomp_size;
+        e->crc32 = crc; e->method = method; e->filename = filename; e->filename_len = fn_len;
+        e->next = NULL;
+        if (last) last->next = e; else u->entries = e;
+        last = e;
+    }
+    u->cur = u->entries;
+    return (unzFile)u;
 }
 
 int unzGetGlobalInfo(unzFile file, unz_global_info *pglobal_info) {
-    unz_internal *s = (unz_internal *)file;
-    pglobal_info->number_entry = s->number_entry;
-    pglobal_info->size_comment = 0;
+    unz_internal *u = (unz_internal *)file;
+    if (!u || !pglobal_info) return UNZ_PARAMERROR;
+    uint32_t count = 0;
+    unz_entry *e = u->entries;
+    while (e) { count++; e = e->next; }
+    pglobal_info->number_entry = count;
     return UNZ_OK;
 }
 
+int unzGoToFirstFile(unzFile file) {
+    unz_internal *u = (unz_internal *)file;
+    if (!u) return ZIP_PARAMERROR;
+    if (u->cur_open) unzCloseCurrentFile(file);
+    u->cur = u->entries;
+    return u->cur ? ZIP_OK : ZIP_END;
+}
+
+int unzGoToNextFile(unzFile file) {
+    unz_internal *u = (unz_internal *)file;
+    if (!u || !u->cur) return ZIP_PARAMERROR;
+    if (u->cur_open) unzCloseCurrentFile(file);
+    u->cur = u->cur->next;
+    return u->cur ? ZIP_OK : ZIP_END;
+}
+
 int unzGetCurrentFileInfo(unzFile file, unz_file_info *pfile_info,
-                            char *szFileName, uLong fileNameBufferSize,
-                            void *extraField, uLong extraFieldBufferSize,
-                            char *szComment, uLong commentBufferSize) {
-    unz_internal *s = (unz_internal *)file;
-    if (!s->cur_file_ok) return UNZ_END_OF_LIST_OF_FILE;
-    memset(pfile_info, 0, sizeof(*pfile_info));
-    pfile_info->size_filename = s->file.filename_len;
-    if (szFileName && fileNameBufferSize > 0) {
-        uLong cp = (s->file.filename_len < fileNameBufferSize - 1) ? s->file.filename_len : fileNameBufferSize - 1;
-        memcpy(szFileName, s->file.filename, cp);
-        szFileName[cp] = '\0';
+                           char *filename, uLong filename_size,
+                           void *extrafield, uLong extrafield_size,
+                           char *comment, uLong comment_size) {
+    (void)extrafield; (void)extrafield_size; (void)comment; (void)comment_size;
+    unz_internal *u = (unz_internal *)file;
+    if (!u || !u->cur) return UNZ_PARAMERROR;
+    if (pfile_info) {
+        memset(pfile_info, 0, sizeof(unz_file_info));
+        pfile_info->compression_method = u->cur->method;
+        pfile_info->compressed_size = u->cur->comp_size;
+        pfile_info->uncompressed_size = u->cur->uncomp_size;
+        pfile_info->crc = u->cur->crc32;
+        pfile_info->size_filename = u->cur->filename_len;
     }
-    FILE *f = (FILE *)s->filestream;
-    fseek(f, s->file.pos_local_header, SEEK_SET);
-    uInt32 magic = read_uint32(f);
-    if (magic == LOCAL_HEADER_MAGIC) {
-        fseek(f, 4, SEEK_CUR);
-        pfile_info->flag = read_uint16(f);
-        pfile_info->compression_method = read_uint16(f);
-        fseek(f, 4, SEEK_CUR);
-        pfile_info->crc = read_uint32(f);
-        pfile_info->compressed_size = read_uint32(f);
-        pfile_info->uncompressed_size = read_uint32(f);
-        uInt16 fnlen = read_uint16(f);
-        uInt16 eflen = read_uint16(f);
-        pfile_info->size_file_extra = eflen;
-        if (extraField && extraFieldBufferSize > 0 && eflen > 0) {
-            fseek(f, fnlen, SEEK_CUR);
-            uLong rd = (eflen < extraFieldBufferSize) ? eflen : extraFieldBufferSize;
-            fread(extraField, 1, rd, f);
-        }
+    if (filename && filename_size) {
+        uLong copy = u->cur->filename_len < filename_size - 1 ? u->cur->filename_len : filename_size - 1;
+        memcpy(filename, u->cur->filename, copy);
+        filename[copy] = 0;
     }
     return UNZ_OK;
 }
 
 int unzOpenCurrentFile(unzFile file) {
-    unz_internal *s = (unz_internal *)file;
-    if (!s->cur_file_ok) return UNZ_END_OF_LIST_OF_FILE;
-    FILE *f = (FILE *)s->filestream;
-    fseek(f, s->file.pos_local_header, SEEK_SET);
-    uInt32 magic = read_uint32(f);
-    if (magic != LOCAL_HEADER_MAGIC) return UNZ_BADZIPFILE;
-    fseek(f, 4, SEEK_CUR);
-    uInt flag = read_uint16(f);
-    uInt method = read_uint16(f);
-    fseek(f, 4, SEEK_CUR);
-    uLong crc = read_uint32(f);
-    uLong csize = read_uint32(f);
-    uLong usize = read_uint32(f);
-    uInt16 fnlen = read_uint16(f);
-    uInt16 eflen = read_uint16(f);
-    s->file.method = method;
-    s->file.crc = crc;
-    s->file.compressed_size = csize;
-    s->file.uncompressed_size = usize;
-    s->file.stream_pos = 0;
-    long data_start = s->file.pos_local_header + 30 + fnlen + eflen;
-    fseek(f, data_start, SEEK_SET);
-    if (method == Z_DEFLATED) {
-        s->file.stream.zalloc = Z_NULL;
-        s->file.stream.zfree = Z_NULL;
-        s->file.stream.opaque = Z_NULL;
-        s->file.stream.avail_in = 0;
-        s->file.stream.next_in = Z_NULL;
-        inflateInit2(&s->file.stream, -MAX_WBITS);
-        s->file.stream_initialised = 1;
+    unz_internal *u = (unz_internal *)file;
+    if (!u || !u->cur || u->cur_open) return ZIP_PARAMERROR;
+    fseek(u->fp, u->cur->offset, SEEK_SET);
+    uint32_t sig = read_le32(u->fp);
+    if (sig != LOCAL_HEADER_MAGIC) return ZIP_BADZIPFILE;
+    fseek(u->fp, 22, SEEK_CUR);
+    uint16_t fn_len = read_le16(u->fp);
+    uint16_t ex_len = read_le16(u->fp);
+    fseek(u->fp, fn_len + ex_len, SEEK_CUR);
+    u->comp_left = u->cur->comp_size;
+    u->bytes_left = u->cur->uncomp_size;
+    if (u->cur->method == 8) {
+        memset(&u->zstr, 0, sizeof(u->zstr));
+        if (inflateInit2(&u->zstr, -MAX_WBITS) != Z_OK) return ZIP_INTERNALERROR;
+        u->zstr_init = 1;
     }
-    return UNZ_OK;
+    u->cur_open = 1;
+    return ZIP_OK;
 }
 
-int unzReadCurrentFile(unzFile file, voidp buf, unsigned len) {
-    unz_internal *s = (unz_internal *)file;
-    if (!s->cur_file_ok) return UNZ_END_OF_LIST_OF_FILE;
-    FILE *f = (FILE *)s->filestream;
-    if (s->file.method == 0) {
-        uLong remain = s->file.compressed_size - s->file.stream_pos;
-        uLong rd = (len < remain) ? len : remain;
-        if (rd > 0) {
-            fread(buf, 1, rd, f);
-            s->file.stream_pos += rd;
-        }
-        return (int)rd;
-    } else if (s->file.method == Z_DEFLATED) {
-        s->file.stream.next_out = (Bytef *)buf;
-        s->file.stream.avail_out = len;
-        while (s->file.stream.avail_out > 0) {
-            if (s->file.stream.avail_in == 0 && s->file.stream_pos < s->file.compressed_size) {
-                uLong remain = s->file.compressed_size - s->file.stream_pos;
-                uLong rd = (s->file.read_buffer_size < remain) ? s->file.read_buffer_size : remain;
-                fread(s->file.read_buffer, 1, rd, f);
-                s->file.stream_pos += rd;
-                s->file.stream.next_in = s->file.read_buffer;
-                s->file.stream.avail_in = (uInt)rd;
+int unzReadCurrentFile(unzFile file, void *buf, uint32_t len) {
+    unz_internal *u = (unz_internal *)file;
+    if (!u || !u->cur_open) return ZIP_PARAMERROR;
+    if (u->bytes_left == 0) return 0;
+    if (len > u->bytes_left) len = u->bytes_left;
+    if (u->cur->method == 0) {
+        uint32_t to_read = len < u->comp_left ? len : u->comp_left;
+        size_t r = fread(buf, 1, to_read, u->fp);
+        u->comp_left -= (uint32_t)r; u->bytes_left -= (uint32_t)r;
+        return (int)r;
+    } else if (u->cur->method == 8) {
+        u->zstr.next_out = (Bytef *)buf;
+        u->zstr.avail_out = len;
+        static unsigned char comp_buf[65536];
+        while (u->zstr.avail_out > 0 && u->comp_left > 0) {
+            if (u->zstr.avail_in == 0) {
+                uint32_t to_read = u->comp_left < sizeof(comp_buf) ? u->comp_left : (uint32_t)sizeof(comp_buf);
+                size_t r = fread(comp_buf, 1, to_read, u->fp);
+                u->comp_left -= (uint32_t)r;
+                u->zstr.next_in = comp_buf;
+                u->zstr.avail_in = (uInt)r;
             }
-            int err = inflate(&s->file.stream, Z_NO_FLUSH);
-            if (err == Z_STREAM_END) break;
-            if (err != Z_OK) return 0;
+            int ret = inflate(&u->zstr, Z_NO_FLUSH);
+            if (ret == Z_STREAM_END) break;
+            if (ret != Z_OK) return ZIP_INTERNALERROR;
         }
-        return (int)(len - s->file.stream.avail_out);
+        uint32_t got = len - u->zstr.avail_out;
+        u->bytes_left -= got;
+        return (int)got;
     }
-    return 0;
+    return ZIP_PARAMERROR;
 }
 
 int unzCloseCurrentFile(unzFile file) {
-    unz_internal *s = (unz_internal *)file;
-    if (s->file.stream_initialised) {
-        inflateEnd(&s->file.stream);
-        s->file.stream_initialised = 0;
-    }
-    return UNZ_OK;
+    unz_internal *u = (unz_internal *)file;
+    if (!u || !u->cur_open) return ZIP_PARAMERROR;
+    if (u->zstr_init) { inflateEnd(&u->zstr); u->zstr_init = 0; }
+    u->cur_open = 0;
+    return ZIP_OK;
+}
+
+int unzClose(unzFile file) {
+    unz_internal *u = (unz_internal *)file;
+    if (!u) return ZIP_PARAMERROR;
+    if (u->cur_open) unzCloseCurrentFile(file);
+    fclose(u->fp);
+    unz_entry *e = u->entries;
+    while (e) { unz_entry *n = e->next; free(e->filename); free(e); e = n; }
+    free(u);
+    return ZIP_OK;
 }
