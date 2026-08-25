@@ -130,7 +130,7 @@
     self.sizeLabel.numberOfLines = 2;
     self.downloadsLabel.text = [NSString stringWithFormat:@"下载\n%ld", (long)self.app.downloads];
     self.downloadsLabel.numberOfLines = 2;
-    self.signedLabel.text = [NSString stringWithFormat:@"状态\n%@", self.app.signed ? @"已签名" : @"未签名"];
+    self.signedLabel.text = [NSString stringWithFormat:@"状态\n%@", self.app.isSigned ? @"已签名" : @"未签名"];
     self.signedLabel.numberOfLines = 2;
     self.descriptionView.text = self.app.desc ?: @"暂无描述";
 
