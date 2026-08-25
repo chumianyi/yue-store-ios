@@ -9,7 +9,7 @@
 @property (nonatomic, copy) NSString *category;
 @property (nonatomic, copy) NSString *subCategory;
 @property (nonatomic, copy) NSString *desc;
-@property (nonatomic, assign) BOOL signed;
+@property (nonatomic, assign) BOOL isSigned;
 @property (nonatomic, copy) NSString *tag;
 @property (nonatomic, assign) NSInteger downloads;
 + (NSArray<AppModel *> *)parseFromJSData:(NSData *)data;
