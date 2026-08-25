@@ -2,14 +2,15 @@
 #define _ZLIBIOAPI_H
 #include <stdio.h>
 #include <stdint.h>
+#include <zlib.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
 typedef voidpf (*open_file_func)(voidpf opaque, const char *filename, int mode);
-typedef uint64_t (*read_file_func)(voidpf opaque, voidpf stream, void *buf, uint64_t size);
-typedef uint64_t (*write_file_func)(voidpf opaque, voidpf stream, const void *buf, uint64_t size);
+typedef uLong (*read_file_func)(voidpf opaque, voidpf stream, void *buf, uLong size);
+typedef uLong (*write_file_func)(voidpf opaque, voidpf stream, const void *buf, uLong size);
 typedef long (*tell_file_func)(voidpf opaque, voidpf stream);
-typedef long (*seek_file_func)(voidpf opaque, voidpf stream, uint64_t offset, int origin);
+typedef long (*seek_file_func)(voidpf opaque, voidpf stream, uLong offset, int origin);
 typedef int (*close_file_func)(voidpf opaque, voidpf stream);
 typedef int (*testerror_file_func)(voidpf opaque, voidpf stream);
 typedef struct zlib_filefunc_def_s {
