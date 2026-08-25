@@ -1,58 +1,40 @@
+#include "ioapi.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "ioapi.h"
-
-static voidpf call_zopen OF((voidpf opaque, const char *filename, int mode)) {
-    FILE *file = NULL;
-    const char *mode_fopen = NULL;
-    if ((mode & ZLIB_FILEFUNC_MODE_READWRITEFILTER) == ZLIB_FILEFUNC_MODE_READ) mode_fopen = "rb";
-    else if (mode & ZLIB_FILEFUNC_MODE_EXISTING) mode_fopen = "r+b";
-    else if (mode & ZLIB_FILEFUNC_MODE_CREATE) mode_fopen = "wb";
-    if ((filename != NULL) && (mode_fopen != NULL)) file = fopen(filename, mode_fopen);
-    return file;
+static voidpf fopen_open(voidpf opaque, const char *filename, int mode) {
+    (void)opaque;
+    const char *mode_fopen = "rb";
+    if ((mode & 2) && (mode & 8)) mode_fopen = "wb+";
+    else if (mode & 2) mode_fopen = "rb+";
+    else if (mode & 8) mode_fopen = "wb";
+    return (voidpf)fopen(filename, mode_fopen);
 }
-
-static uLong call_zread OF((voidpf opaque, voidpf stream, void *buf, uLong size)) {
-    uLong ret = fread(buf, 1, size, (FILE *)stream);
-    return ret;
+static uint64_t fopen_read(voidpf opaque, voidpf stream, void *buf, uint64_t size) {
+    (void)opaque;
+    return (uint64_t)fread(buf, 1, (size_t)size, (FILE *)stream);
 }
-
-static uLong call_zwrite OF((voidpf opaque, voidpf stream, const void *buf, uLong size)) {
-    uLong ret = fwrite(buf, 1, size, (FILE *)stream);
-    return ret;
+static uint64_t fopen_write(voidpf opaque, voidpf stream, const void *buf, uint64_t size) {
+    (void)opaque;
+    return (uint64_t)fwrite(buf, 1, (size_t)size, (FILE *)stream);
 }
-
-static long call_ztell OF((voidpf opaque, voidpf stream)) {
-    return ftell((FILE *)stream);
+static long fopen_tell(voidpf opaque, voidpf stream) { (void)opaque; return ftell((FILE *)stream); }
+static long fopen_seek(voidpf opaque, voidpf stream, uint64_t offset, int origin) {
+    (void)opaque;
+    int fseek_origin = SEEK_SET;
+    if (origin == 1) fseek_origin = SEEK_CUR;
+    else if (origin == 2) fseek_origin = SEEK_END;
+    return fseek((FILE *)stream, (long)offset, fseek_origin);
 }
-
-static long call_zseek OF((voidpf opaque, voidpf stream, uLong offset, int origin)) {
-    int fseek_origin = 0;
-    switch (origin) {
-        case ZLIB_FILEFUNC_SEEK_CUR: fseek_origin = SEEK_CUR; break;
-        case ZLIB_FILEFUNC_SEEK_END: fseek_origin = SEEK_END; break;
-        case ZLIB_FILEFUNC_SEEK_SET: fseek_origin = SEEK_SET; break;
-        default: return -1;
-    }
-    return fseek((FILE *)stream, offset, fseek_origin);
-}
-
-static int call_zclose OF((voidpf opaque, voidpf stream)) {
-    return fclose((FILE *)stream);
-}
-
-static int call_zerror OF((voidpf opaque, voidpf stream)) {
-    return ferror((FILE *)stream);
-}
-
-void fill_fopen_filefunc (zlib_filefunc_def *pzlib_filefunc_def) {
-    pzlib_filefunc_def->zopen_file = call_zopen;
-    pzlib_filefunc_def->zread_file = call_zread;
-    pzlib_filefunc_def->zwrite_file = call_zwrite;
-    pzlib_filefunc_def->ztell_file = call_ztell;
-    pzlib_filefunc_def->zseek_file = call_zseek;
-    pzlib_filefunc_def->zclose_file = call_zclose;
-    pzlib_filefunc_def->zerror_file = call_zerror;
+static int fopen_close(voidpf opaque, voidpf stream) { (void)opaque; return fclose((FILE *)stream); }
+static int fopen_error(voidpf opaque, voidpf stream) { (void)opaque; (void)stream; return 0; }
+void fill_fopen_filefunc(zlib_filefunc_def *pzlib_filefunc_def) {
+    pzlib_filefunc_def->zopen_file = fopen_open;
+    pzlib_filefunc_def->zread_file = fopen_read;
+    pzlib_filefunc_def->zwrite_file = fopen_write;
+    pzlib_filefunc_def->ztell_file = fopen_tell;
+    pzlib_filefunc_def->zseek_file = fopen_seek;
+    pzlib_filefunc_def->zclose_file = fopen_close;
+    pzlib_filefunc_def->zerror_file = fopen_error;
     pzlib_filefunc_def->opaque = NULL;
 }
