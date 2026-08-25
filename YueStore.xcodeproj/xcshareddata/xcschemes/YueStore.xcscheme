@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "4EE9D0082846480385975183"
+               BlueprintIdentifier = "B2C3D4E5F60718293A4B5C6D7E8F90A1"
                BuildableName = "YueStore.app"
                BlueprintName = "YueStore"
                ReferencedContainer = "container:YueStore.xcodeproj">
@@ -44,7 +44,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4EE9D0082846480385975183"
+            BlueprintIdentifier = "B2C3D4E5F60718293A4B5C6D7E8F90A1"
             BuildableName = "YueStore.app"
             BlueprintName = "YueStore"
             ReferencedContainer = "container:YueStore.xcodeproj">
@@ -61,7 +61,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4EE9D0082846480385975183"
+            BlueprintIdentifier = "B2C3D4E5F60718293A4B5C6D7E8F90A1"
             BuildableName = "YueStore.app"
             BlueprintName = "YueStore"
             ReferencedContainer = "container:YueStore.xcodeproj">
