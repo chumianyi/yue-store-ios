@@ -14,7 +14,7 @@
         AppModel *app = [[AppModel alloc] init];
         app.version = @"--";
         app.size = @"--";
-        app.signed = NO;
+        app.isSigned = NO;
         app.tag = @"";
         app.downloads = 0;
         while (1) {
@@ -37,7 +37,7 @@
             } else if ([key isEqualToString:@"description"]) {
                 app.desc = [self scanJSString:scanner];
             } else if ([key isEqualToString:@"signed"]) {
-                app.signed = [self scanJSBool:scanner];
+                app.isSigned = [self scanJSBool:scanner];
             } else if ([key isEqualToString:@"tag"]) {
                 app.tag = [self scanJSString:scanner];
             } else if ([key isEqualToString:@"downloads"]) {
