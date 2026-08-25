@@ -44,18 +44,34 @@ jobs:
 
     - name: Package IPA
       run: |
-        APP_PATH=$(find build -name "YueStore.app" -type d | head -1)
-        if [ -z "$APP_PATH" ]; then
+        set -e
+        APP_PATH="build/Build/Products/Release-iphoneos/YueStore.app"
+        if [ ! -d "$APP_PATH" ]; then
+          echo "Trying to find .app..."
+          APP_PATH=$(find build -name "YueStore.app" -type d -path "*/Products/*" | head -1)
+        fi
+        if [ -z "$APP_PATH" ] || [ ! -d "$APP_PATH" ]; then
           echo "ERROR: YueStore.app not found"
-          find build -name "*.app" -type d
+          find build -name "*.app" -type d 2>/dev/null || true
           exit 1
         fi
         echo "Found app at: $APP_PATH"
+        echo "App contents:"
+        ls -la "$APP_PATH/"
+        APP_SIZE=$(du -sk "$APP_PATH" | cut -f1)
+        echo "App size: ${APP_SIZE}KB"
+        if [ "$APP_SIZE" -lt 100 ]; then
+          echo "ERROR: App too small, build likely failed"
+          exit 1
+        fi
+        rm -rf Payload
         mkdir -p Payload
-        cp -R "$APP_PATH" Payload/
+        ditto "$APP_PATH" "Payload/YueStore.app"
+        echo "Payload contents:"
+        ls -la Payload/YueStore.app/ | head -20
         zip -r yue.store.ipa Payload
         ls -la yue.store.ipa
-        echo "IPA_SIZE=$(stat -f%z yue.store.ipa 2>/dev/null || stat -c%s yue.store.ipa 2>/dev/null)"
+        echo "IPA_SIZE=$(stat -f%z yue.store.ipa)"
 
     - name: Upload IPA
       uses: actions/upload-artifact@v4
