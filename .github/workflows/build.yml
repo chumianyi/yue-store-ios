@@ -1,0 +1,73 @@
+name: Build IPA
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Select Xcode
+      run: |
+        sudo xcode-select -switch /Applications/Xcode_16.4.app/Contents/Developer 2>/dev/null || \
+        sudo xcode-select -switch /Applications/Xcode_16.3.app/Contents/Developer 2>/dev/null || \
+        sudo xcode-select -switch /Applications/Xcode_16.2.app/Contents/Developer 2>/dev/null || \
+        sudo xcode-select -switch /Applications/Xcode_16.1.app/Contents/Developer 2>/dev/null || \
+        sudo xcode-select -switch /Applications/Xcode_16.app/Contents/Developer 2>/dev/null || true
+        xcodebuild -version
+
+    - name: List Xcode versions
+      run: ls -la /Applications/ | grep Xcode || true
+
+    - name: Build for iOS (generic)
+      run: |
+        cd "$GITHUB_WORKSPACE"
+        xcodebuild -project YueStore.xcodeproj \
+          -scheme YueStore \
+          -configuration Release \
+          -destination 'generic/platform=iOS' \
+          -derivedDataPath build \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO \
+          build 2>&1 | tee build.log
+
+    - name: Find .app
+      run: |
+        find build -name "YueStore.app" -type d 2>/dev/null || true
+        ls -la build/Build/Products/ 2>/dev/null || true
+
+    - name: Package IPA
+      run: |
+        APP_PATH=$(find build -name "YueStore.app" -type d | head -1)
+        if [ -z "$APP_PATH" ]; then
+          echo "ERROR: YueStore.app not found"
+          find build -name "*.app" -type d
+          exit 1
+        fi
+        echo "Found app at: $APP_PATH"
+        mkdir -p Payload
+        cp -R "$APP_PATH" Payload/
+        zip -r yue.store.ipa Payload
+        ls -la yue.store.ipa
+        echo "IPA_SIZE=$(stat -f%z yue.store.ipa 2>/dev/null || stat -c%s yue.store.ipa 2>/dev/null)"
+
+    - name: Upload IPA
+      uses: actions/upload-artifact@v4
+      with:
+        name: yue-store-ipa
+        path: yue.store.ipa
+        retention-days: 30
+
+    - name: Upload build log on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-log
+        path: build.log
+        retention-days: 7

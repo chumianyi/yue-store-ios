@@ -1,0 +1,439 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+/* Begin PBXBuildFile section */
+		67DFEDEFCA644FEC95F549C1 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 28360E79A9714752AEB5A6D9 /* main.m */; };
+		7BFAAB958ACF42B783DCC1A8 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = AE0ACAB892B947499337615A /* AppDelegate.m */; };
+		D0C1EA36E7C4427DB76B7773 /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = CAC8E91CF2E741F5B9F9A936 /* SceneDelegate.m */; };
+		08C6334D06F34819AD207482 /* StarFieldView.m in Sources */ = {isa = PBXBuildFile; fileRef = E6DA96B1373640C99F698CD7 /* StarFieldView.m */; };
+		467DC3F872034CF5AD55823B /* LiquidGlassTabBarController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D5C167A67FB4B29915941B9 /* LiquidGlassTabBarController.m */; };
+		6085CCE171C946A2B743CEE0 /* HomeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = EC3F4F1480F2475999702078 /* HomeViewController.m */; };
+		478028CFBE684764BFBCFD07 /* CategoryViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5EA3BB9B8E5642269FC01CED /* CategoryViewController.m */; };
+		C729C7C24E4846EA9D831755 /* SearchViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9AD1DBC6A04D49CB90DDC84D /* SearchViewController.m */; };
+		96F8CCA2067F42FEBB5A2ED7 /* SignViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A8B1ABCB44FC4D4292CA52F9 /* SignViewController.m */; };
+		5018CB9CC58F46F0A801096A /* AppDetailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 91B5CA3CCBA343369E64BEB6 /* AppDetailViewController.m */; };
+		8F708FDDFAB948C78C6CCF66 /* AppModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B04A998B8CE4E67962DF973 /* AppModel.m */; };
+		D5DDCD73BC5C410781BABC6E /* APIManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 8552614CAA3A496089F8C671 /* APIManager.m */; };
+		7306AE0E2E264EBEBF0FC079 /* IPADownloadManager.m in Sources */ = {isa = PBXBuildFile; fileRef = A33A4A4E45EF4BAC933E9801 /* IPADownloadManager.m */; };
+		A0CE305955AC42F8918315D4 /* CertificateManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FD25D884F3614AD2BB79994C /* CertificateManager.m */; };
+		A0281843717C44BD97E14004 /* AppCollectionViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = D0165D3D6E964ABFAA266D6B /* AppCollectionViewCell.m */; };
+		FBBD82170C0D4654A554D358 /* ipa_signer.c in Sources */ = {isa = PBXBuildFile; fileRef = 097865314CC64C6A9717F5AE /* ipa_signer.c */; };
+		396DA42593CF4B459321E4FA /* SignerBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B4574F9E26D474FA07A4F0C /* SignerBridge.m */; };
+		B494450F22324237817CFD46 /* ioapi.c in Sources */ = {isa = PBXBuildFile; fileRef = 90DDFF2AD4794D84AC6EBBD9 /* ioapi.c */; };
+		B8AD57CEAEB142B2873D07B3 /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = 0E7F508D2D184717A7054E2F /* zip.c */; };
+		478E80DE85E0491689539453 /* unzip.c in Sources */ = {isa = PBXBuildFile; fileRef = A3B930211B8F4C2D8BEBDF55 /* unzip.c */; };
+		66240DD704EF4B4CA7DCFDE8 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 640D7A4A743941DE83A9140C /* UIKit.framework */; };
+		7F2788ACA6254EB0B4AD90DD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 735F5BE9A3B84918A9B97C7D /* Foundation.framework */; };
+		3FB00340C3584F4693C441E5 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 539D1A618F344D7191423B65 /* CoreGraphics.framework */; };
+		FE6E6F57D8E046C58BDBC3A1 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A58ADA329A6044249043C862 /* Security.framework */; };
+		00202E60343C437A801E3EA0 /* SafariServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9575E1557AF8493AB1D7F9E2 /* SafariServices.framework */; };
+		D04E99B7EEEA4890AA618DD7 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC967CAE78404692A51F9C76 /* MobileCoreServices.framework */; };
+		DEC16FC5E3CE4ABFB3F444C2 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 5B056778453F4829897F4D1A /* libz.tbd */; };
+/* End PBXBuildFile section */
+/* Begin PBXFileReference section */
+		28360E79A9714752AEB5A6D9 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "main.m"; sourceTree = "<group>"; };
+		AE0ACAB892B947499337615A /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "AppDelegate.m"; sourceTree = "<group>"; };
+		CAC8E91CF2E741F5B9F9A936 /* SceneDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SceneDelegate.m"; sourceTree = "<group>"; };
+		E6DA96B1373640C99F698CD7 /* StarFieldView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "StarFieldView.m"; sourceTree = "<group>"; };
+		1D5C167A67FB4B29915941B9 /* LiquidGlassTabBarController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "LiquidGlassTabBarController.m"; sourceTree = "<group>"; };
+		EC3F4F1480F2475999702078 /* HomeViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "HomeViewController.m"; sourceTree = "<group>"; };
+		5EA3BB9B8E5642269FC01CED /* CategoryViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "CategoryViewController.m"; sourceTree = "<group>"; };
+		9AD1DBC6A04D49CB90DDC84D /* SearchViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SearchViewController.m"; sourceTree = "<group>"; };
+		A8B1ABCB44FC4D4292CA52F9 /* SignViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SignViewController.m"; sourceTree = "<group>"; };
+		91B5CA3CCBA343369E64BEB6 /* AppDetailViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "AppDetailViewController.m"; sourceTree = "<group>"; };
+		0B04A998B8CE4E67962DF973 /* AppModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "AppModel.m"; sourceTree = "<group>"; };
+		8552614CAA3A496089F8C671 /* APIManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "APIManager.m"; sourceTree = "<group>"; };
+		A33A4A4E45EF4BAC933E9801 /* IPADownloadManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "IPADownloadManager.m"; sourceTree = "<group>"; };
+		FD25D884F3614AD2BB79994C /* CertificateManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "CertificateManager.m"; sourceTree = "<group>"; };
+		D0165D3D6E964ABFAA266D6B /* AppCollectionViewCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "AppCollectionViewCell.m"; sourceTree = "<group>"; };
+		097865314CC64C6A9717F5AE /* ipa_signer.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "Signer/ipa_signer.c"; sourceTree = "<group>"; };
+		8B4574F9E26D474FA07A4F0C /* SignerBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "Signer/SignerBridge.m"; sourceTree = "<group>"; };
+		90DDFF2AD4794D84AC6EBBD9 /* ioapi.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "Signer/minizip/ioapi.c"; sourceTree = "<group>"; };
+		0E7F508D2D184717A7054E2F /* zip.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "Signer/minizip/zip.c"; sourceTree = "<group>"; };
+		A3B930211B8F4C2D8BEBDF55 /* unzip.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "Signer/minizip/unzip.c"; sourceTree = "<group>"; };
+		4B59412A3F194B009661E581 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AppDelegate.h"; sourceTree = "<group>"; };
+		2F30F1A022AC4ED997B82F03 /* SceneDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SceneDelegate.h"; sourceTree = "<group>"; };
+		CBCBBF7C93BE46A49C6BA83C /* StarFieldView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "StarFieldView.h"; sourceTree = "<group>"; };
+		7FBBEF1B9B4944B19EE282AC /* LiquidGlassTabBarController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LiquidGlassTabBarController.h"; sourceTree = "<group>"; };
+		DC186E8D387F4AA7A87A54AA /* HomeViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "HomeViewController.h"; sourceTree = "<group>"; };
+		AF9C9B793B34486E91F4A46B /* CategoryViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CategoryViewController.h"; sourceTree = "<group>"; };
+		CC33F7694EAB42279E7B6C39 /* SearchViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SearchViewController.h"; sourceTree = "<group>"; };
+		410DB3BE31EC41A0980BD225 /* SignViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SignViewController.h"; sourceTree = "<group>"; };
+		74764A4303AE4CC08947EE5C /* AppDetailViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AppDetailViewController.h"; sourceTree = "<group>"; };
+		2529C81D6B7B4E66AEC93B32 /* AppModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AppModel.h"; sourceTree = "<group>"; };
+		887DB6F021904A90A26D3107 /* APIManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "APIManager.h"; sourceTree = "<group>"; };
+		16E8F54720054244B18AAA03 /* IPADownloadManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "IPADownloadManager.h"; sourceTree = "<group>"; };
+		4AB6FF9CD0DA4B839C58B22E /* CertificateManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CertificateManager.h"; sourceTree = "<group>"; };
+		DB59511924B441A7BD5DF2C1 /* AppCollectionViewCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AppCollectionViewCell.h"; sourceTree = "<group>"; };
+		5C1C2A8909884FE0ACC477C6 /* ipa_signer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Signer/ipa_signer.h"; sourceTree = "<group>"; };
+		3E452E3AF3CE4A0DA2B457E9 /* SignerBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Signer/SignerBridge.h"; sourceTree = "<group>"; };
+		0EE661DC92684BCEBEB2C6E9 /* ioapi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Signer/minizip/ioapi.h"; sourceTree = "<group>"; };
+		0C1FFD408EE944368B878E99 /* zip.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Signer/minizip/zip.h"; sourceTree = "<group>"; };
+		3311AEBC0E5C406D9DAF1A5A /* unzip.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Signer/minizip/unzip.h"; sourceTree = "<group>"; };
+		A4F15303A882497D8BDBFBB7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A0E2C066559941D6AA009DCB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		640D7A4A743941DE83A9140C /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework if 'UIKit.framework'.endswith('.framework') else 'usr/lib/UIKit.framework'; sourceTree = SDKROOT; };
+		735F5BE9A3B84918A9B97C7D /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework if 'Foundation.framework'.endswith('.framework') else 'usr/lib/Foundation.framework'; sourceTree = SDKROOT; };
+		539D1A618F344D7191423B65 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework if 'CoreGraphics.framework'.endswith('.framework') else 'usr/lib/CoreGraphics.framework'; sourceTree = SDKROOT; };
+		A58ADA329A6044249043C862 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework if 'Security.framework'.endswith('.framework') else 'usr/lib/Security.framework'; sourceTree = SDKROOT; };
+		9575E1557AF8493AB1D7F9E2 /* SafariServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SafariServices.framework; path = System/Library/Frameworks/SafariServices.framework if 'SafariServices.framework'.endswith('.framework') else 'usr/lib/SafariServices.framework'; sourceTree = SDKROOT; };
+		EC967CAE78404692A51F9C76 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework if 'MobileCoreServices.framework'.endswith('.framework') else 'usr/lib/MobileCoreServices.framework'; sourceTree = SDKROOT; };
+		5B056778453F4829897F4D1A /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.text-based-dylib-definition; name = libz.tbd; path = System/Library/Frameworks/libz.tbd if 'libz.tbd'.endswith('.framework') else 'usr/lib/libz.tbd'; sourceTree = SDKROOT; };
+		9D450F4A2407430DA8908FEA /* YueStore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YueStore.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+/* Begin PBXFrameworksBuildPhase section */
+		1C7717E989B248C89C34C6D4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				66240DD704EF4B4CA7DCFDE8 /* UIKit.framework in Frameworks */,
+				7F2788ACA6254EB0B4AD90DD /* Foundation.framework in Frameworks */,
+				3FB00340C3584F4693C441E5 /* CoreGraphics.framework in Frameworks */,
+				FE6E6F57D8E046C58BDBC3A1 /* Security.framework in Frameworks */,
+				00202E60343C437A801E3EA0 /* SafariServices.framework in Frameworks */,
+				D04E99B7EEEA4890AA618DD7 /* MobileCoreServices.framework in Frameworks */,
+				DEC16FC5E3CE4ABFB3F444C2 /* libz.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+/* Begin PBXGroup section */
+		944D068D91734F9CBAD27F0B = {
+			isa = PBXGroup;
+			children = (
+				B55A3305EE234D6B95496F21 /* YueStore */,
+				E102BDA98D2F4A71A5D6BF13 /* Signer */,
+				D8F243750E6F44E1BEAD4102 /* Frameworks */,
+				CB48C0B283E2423ABA13FEF9 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		B55A3305EE234D6B95496F21 /* YueStore */ = {
+			isa = PBXGroup;
+			children = (
+				28360E79A9714752AEB5A6D9 /* main.m */,
+				AE0ACAB892B947499337615A /* AppDelegate.m */,
+				CAC8E91CF2E741F5B9F9A936 /* SceneDelegate.m */,
+				E6DA96B1373640C99F698CD7 /* StarFieldView.m */,
+				1D5C167A67FB4B29915941B9 /* LiquidGlassTabBarController.m */,
+				EC3F4F1480F2475999702078 /* HomeViewController.m */,
+				5EA3BB9B8E5642269FC01CED /* CategoryViewController.m */,
+				9AD1DBC6A04D49CB90DDC84D /* SearchViewController.m */,
+				A8B1ABCB44FC4D4292CA52F9 /* SignViewController.m */,
+				91B5CA3CCBA343369E64BEB6 /* AppDetailViewController.m */,
+				0B04A998B8CE4E67962DF973 /* AppModel.m */,
+				8552614CAA3A496089F8C671 /* APIManager.m */,
+				A33A4A4E45EF4BAC933E9801 /* IPADownloadManager.m */,
+				FD25D884F3614AD2BB79994C /* CertificateManager.m */,
+				D0165D3D6E964ABFAA266D6B /* AppCollectionViewCell.m */,
+				4B59412A3F194B009661E581 /* AppDelegate.h */,
+				2F30F1A022AC4ED997B82F03 /* SceneDelegate.h */,
+				CBCBBF7C93BE46A49C6BA83C /* StarFieldView.h */,
+				7FBBEF1B9B4944B19EE282AC /* LiquidGlassTabBarController.h */,
+				DC186E8D387F4AA7A87A54AA /* HomeViewController.h */,
+				AF9C9B793B34486E91F4A46B /* CategoryViewController.h */,
+				CC33F7694EAB42279E7B6C39 /* SearchViewController.h */,
+				410DB3BE31EC41A0980BD225 /* SignViewController.h */,
+				74764A4303AE4CC08947EE5C /* AppDetailViewController.h */,
+				2529C81D6B7B4E66AEC93B32 /* AppModel.h */,
+				887DB6F021904A90A26D3107 /* APIManager.h */,
+				16E8F54720054244B18AAA03 /* IPADownloadManager.h */,
+				4AB6FF9CD0DA4B839C58B22E /* CertificateManager.h */,
+				DB59511924B441A7BD5DF2C1 /* AppCollectionViewCell.h */,
+				A4F15303A882497D8BDBFBB7 /* Info.plist */,
+				A0E2C066559941D6AA009DCB /* Assets.xcassets */,
+			);
+			path = YueStore;
+			sourceTree = "<group>";
+		};
+		E102BDA98D2F4A71A5D6BF13 /* Signer */ = {
+			isa = PBXGroup;
+			children = (
+				097865314CC64C6A9717F5AE /* ipa_signer.c */,
+				5C1C2A8909884FE0ACC477C6 /* ipa_signer.h */,
+				8B4574F9E26D474FA07A4F0C /* SignerBridge.m */,
+				3E452E3AF3CE4A0DA2B457E9 /* SignerBridge.h */,
+				1CAF057C11974B65AC6510F5 /* minizip */,
+			);
+			path = Signer;
+			sourceTree = "<group>";
+		};
+		1CAF057C11974B65AC6510F5 /* minizip */ = {
+			isa = PBXGroup;
+			children = (
+				90DDFF2AD4794D84AC6EBBD9 /* ioapi.c */,
+				0EE661DC92684BCEBEB2C6E9 /* ioapi.h */,
+				0E7F508D2D184717A7054E2F /* zip.c */,
+				0C1FFD408EE944368B878E99 /* zip.h */,
+				A3B930211B8F4C2D8BEBDF55 /* unzip.c */,
+				3311AEBC0E5C406D9DAF1A5A /* unzip.h */,
+			);
+			path = minizip;
+			sourceTree = "<group>";
+		};
+		D8F243750E6F44E1BEAD4102 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				640D7A4A743941DE83A9140C /* UIKit.framework */,
+				735F5BE9A3B84918A9B97C7D /* Foundation.framework */,
+				539D1A618F344D7191423B65 /* CoreGraphics.framework */,
+				A58ADA329A6044249043C862 /* Security.framework */,
+				9575E1557AF8493AB1D7F9E2 /* SafariServices.framework */,
+				EC967CAE78404692A51F9C76 /* MobileCoreServices.framework */,
+				5B056778453F4829897F4D1A /* libz.tbd */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		CB48C0B283E2423ABA13FEF9 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				9D450F4A2407430DA8908FEA /* YueStore.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+/* Begin PBXNativeTarget section */
+		4EE9D0082846480385975183 /* YueStore */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2D665DDF69CF4310B8EB7A68 /* Build configuration list for PBXNativeTarget "YueStore" */;
+			buildPhases = (
+				E516A92400184E679D634E1C /* Sources */,
+				1C7717E989B248C89C34C6D4 /* Frameworks */,
+				B981828126A64FA1AB5890A2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = YueStore;
+			productName = YueStore;
+			productReference = 9D450F4A2407430DA8908FEA /* YueStore.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+/* Begin PBXProject section */
+		D97093BC1F24477197968091 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					4EE9D0082846480385975183 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = C8F2FF694DDF4BCCBD502AAF /* Build configuration list for PBXProject "YueStore" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 944D068D91734F9CBAD27F0B;
+			productRefGroup = CB48C0B283E2423ABA13FEF9 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				4EE9D0082846480385975183 /* YueStore */,
+			);
+		};
+/* End PBXProject section */
+/* Begin PBXResourcesBuildPhase section */
+		B981828126A64FA1AB5890A2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9923EE20BCE748168E759937 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A0E2C066559941D6AA009DCB /* Assets.xcassets */; };
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+/* Begin PBXSourcesBuildPhase section */
+		E516A92400184E679D634E1C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				67DFEDEFCA644FEC95F549C1 /* main.m in Sources */,
+				7BFAAB958ACF42B783DCC1A8 /* AppDelegate.m in Sources */,
+				D0C1EA36E7C4427DB76B7773 /* SceneDelegate.m in Sources */,
+				08C6334D06F34819AD207482 /* StarFieldView.m in Sources */,
+				467DC3F872034CF5AD55823B /* LiquidGlassTabBarController.m in Sources */,
+				6085CCE171C946A2B743CEE0 /* HomeViewController.m in Sources */,
+				478028CFBE684764BFBCFD07 /* CategoryViewController.m in Sources */,
+				C729C7C24E4846EA9D831755 /* SearchViewController.m in Sources */,
+				96F8CCA2067F42FEBB5A2ED7 /* SignViewController.m in Sources */,
+				5018CB9CC58F46F0A801096A /* AppDetailViewController.m in Sources */,
+				8F708FDDFAB948C78C6CCF66 /* AppModel.m in Sources */,
+				D5DDCD73BC5C410781BABC6E /* APIManager.m in Sources */,
+				7306AE0E2E264EBEBF0FC079 /* IPADownloadManager.m in Sources */,
+				A0CE305955AC42F8918315D4 /* CertificateManager.m in Sources */,
+				A0281843717C44BD97E14004 /* AppCollectionViewCell.m in Sources */,
+				FBBD82170C0D4654A554D358 /* ipa_signer.c in Sources */,
+				396DA42593CF4B459321E4FA /* SignerBridge.m in Sources */,
+				B494450F22324237817CFD46 /* ioapi.c in Sources */,
+				B8AD57CEAEB142B2873D07B3 /* zip.c in Sources */,
+				478E80DE85E0491689539453 /* unzip.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+/* Begin XCBuildConfiguration section */
+		5288FB024BC546EB91DD9CDD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("DEBUG=1", "$(inherited)",);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		E7A85E3869AB418686A0E494 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		C393924781E14027ADE3648B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = YueStore/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait";
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks",);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yuestore.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				OTHER_LDFLAGS = "-lz";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Signer $(SRCROOT)/Signer/minizip";
+				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
+			};
+			name = Debug;
+		};
+		2AA1353DEDA34105AE3A3121 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = YueStore/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks",);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yuestore.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				OTHER_LDFLAGS = "-lz";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Signer $(SRCROOT)/Signer/minizip";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+/* Begin XCConfigurationList section */
+		C8F2FF694DDF4BCCBD502AAF /* Build configuration list for PBXProject "YueStore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5288FB024BC546EB91DD9CDD /* Debug */,
+				E7A85E3869AB418686A0E494 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2D665DDF69CF4310B8EB7A68 /* Build configuration list for PBXNativeTarget "YueStore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C393924781E14027ADE3648B /* Debug */,
+				2AA1353DEDA34105AE3A3121 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D97093BC1F24477197968091 /* Project object */;
+}

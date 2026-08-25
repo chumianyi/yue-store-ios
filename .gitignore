@@ -1,0 +1,10 @@
+build/
+DerivedData/
+*.xcuserstate
+*.xcworkspace
+xcuserdata/
+*.ipa
+*.app
+.DS_Store
+gen_pbxproj.py
+app_data_https.js
