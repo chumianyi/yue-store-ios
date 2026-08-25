@@ -10,16 +10,16 @@ static voidpf fopen_open(voidpf opaque, const char *filename, int mode) {
     else if (mode & 8) mode_fopen = "wb";
     return (voidpf)fopen(filename, mode_fopen);
 }
-static uint64_t fopen_read(voidpf opaque, voidpf stream, void *buf, uint64_t size) {
+static uLong fopen_read(voidpf opaque, voidpf stream, void *buf, uLong size) {
     (void)opaque;
-    return (uint64_t)fread(buf, 1, (size_t)size, (FILE *)stream);
+    return (uLong)fread(buf, 1, (size_t)size, (FILE *)stream);
 }
-static uint64_t fopen_write(voidpf opaque, voidpf stream, const void *buf, uint64_t size) {
+static uLong fopen_write(voidpf opaque, voidpf stream, const void *buf, uLong size) {
     (void)opaque;
-    return (uint64_t)fwrite(buf, 1, (size_t)size, (FILE *)stream);
+    return (uLong)fwrite(buf, 1, (size_t)size, (FILE *)stream);
 }
 static long fopen_tell(voidpf opaque, voidpf stream) { (void)opaque; return ftell((FILE *)stream); }
-static long fopen_seek(voidpf opaque, voidpf stream, uint64_t offset, int origin) {
+static long fopen_seek(voidpf opaque, voidpf stream, uLong offset, int origin) {
     (void)opaque;
     int fseek_origin = SEEK_SET;
     if (origin == 1) fseek_origin = SEEK_CUR;
