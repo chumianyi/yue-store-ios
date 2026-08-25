@@ -26,6 +26,7 @@ jobs:
 
     - name: Build for iOS (generic)
       run: |
+        set -o pipefail
         cd "$GITHUB_WORKSPACE"
         xcodebuild -project YueStore.xcodeproj \
           -scheme YueStore \
