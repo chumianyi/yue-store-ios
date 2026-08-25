@@ -2,241 +2,236 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <zlib.h>
 #include "zip.h"
-#include "ioapi.h"
 
 #define LOCAL_HEADER_MAGIC 0x04034b50
 #define CENTRAL_HEADER_MAGIC 0x02014b50
 #define END_CENTRAL_MAGIC 0x06054b50
-#define ZIP64_END_CENTRAL_MAGIC 0x06064b50
-#define ZIP64_END_CENTRAL_LOCATOR_MAGIC 0x07064b50
-
 #define VERSION_MADEBY 20
 #define VERSION_NEEDED 20
 
+typedef struct central_dir_entry_s {
+    uint32_t offset;
+    uint32_t comp_size;
+    uint32_t uncomp_size;
+    uint32_t crc32;
+    uint16_t method;
+    uint16_t flag;
+    uint16_t mod_time;
+    uint16_t mod_date;
+    char *filename;
+    uint16_t filename_len;
+    struct central_dir_entry_s *next;
+} central_dir_entry;
+
 typedef struct {
-    zlib_filefunc_def filefunc;
-    voidpf filestream;
-    uLong base_seek;
-    uLong byte_before_the_zipfile;
-    uLong number_entry;
-    time_t tm_zip;
-    struct {
-        uLong size_array;
-        uLong gap;
-        char *pData;
-    } central_array;
+    FILE *fp;
+    central_dir_entry *entries;
+    central_dir_entry *last_entry;
+    uint32_t num_entries;
+    uint32_t cd_offset;
+    int in_file;
+    central_dir_entry *cur_entry;
+    z_stream zstr;
+    int zstr_init;
+    uint32_t crc;
+    unsigned char *comp_buf;
+    uint32_t comp_buf_size;
 } zip_internal;
 
-static uLong zipInt64(uLong v) { return v; }
+static uint16_t dos_time(struct tm *t) {
+    return (uint16_t)((t->tm_hour << 11) | (t->tm_min << 5) | (t->tm_sec / 2));
+}
+static uint16_t dos_date(struct tm *t) {
+    return (uint16_t)(((t->tm_year + 1900 - 1980) << 9) | ((t->tm_mon + 1) << 5) | t->tm_mday);
+}
 
-static void put_uint16(FILE *f, uInt v) {
-    uInt16 b = (uInt16)v;
-    fwrite(&b, 1, 2, f);
-}
-static void put_uint32(FILE *f, uLong v) {
-    uInt32 b = (uInt32)v;
-    fwrite(&b, 1, 4, f);
-}
+static void write_le16(FILE *fp, uint16_t v) { fputc(v & 0xff, fp); fputc((v >> 8) & 0xff, fp); }
+static void write_le32(FILE *fp, uint32_t v) { fputc(v & 0xff, fp); fputc((v >> 8) & 0xff, fp); fputc((v >> 16) & 0xff, fp); fputc((v >> 24) & 0xff, fp); }
 
 zipFile zipOpen(const char *pathname, int append) {
-    zip_internal *zi;
-    zlib_filefunc_def filefunc;
-    fill_fopen_filefunc(&filefunc);
-    voidpf filestream = ZOPEN(filefunc, pathname, ZLIB_FILEFUNC_MODE_CREATE | ZLIB_FILEFUNC_MODE_WRITE);
-    if (!filestream) return NULL;
-    zi = (zip_internal *)malloc(sizeof(zip_internal));
-    if (!zi) { ZCLOSE(filefunc, filestream); return NULL; }
-    memset(zi, 0, sizeof(zip_internal));
-    zi->filefunc = filefunc;
-    zi->filestream = filestream;
-    zi->base_seek = 0;
-    zi->byte_before_the_zipfile = 0;
-    zi->number_entry = 0;
-    zi->central_array.size_array = 16384;
-    zi->central_array.pData = (char *)malloc(zi->central_array.size_array);
-    zi->central_array.gap = 0;
-    return (zipFile)zi;
+    (void)append;
+    zip_internal *z = calloc(1, sizeof(zip_internal));
+    if (!z) return NULL;
+    z->fp = fopen(pathname, "wb");
+    if (!z->fp) { free(z); return NULL; }
+    z->comp_buf_size = 65536;
+    z->comp_buf = malloc(z->comp_buf_size);
+    if (!z->comp_buf) { fclose(z->fp); free(z); return NULL; }
+    return (zipFile)z;
 }
 
-typedef struct {
-    int in_opened_file;
-    z_stream stream;
-    uLong crc;
-    uLong uncompressed_size;
-    uLong compressed_size;
-    uLong pos_local_header;
-    char filename[512];
-    uInt filename_len;
-    int method;
-    int level;
-    time_t tm_zip;
-    uLong dosDate;
-    uLong externalFa;
-    uLong internalFa;
-} zip_current_file;
+int zipOpenNewFileInZip(zipFile file, const char *filename,
+                         const zip_fileinfo *zipfi,
+                         const void *extrafield_local, uint32_t size_extrafield_local,
+                         const void *extrafield_global, uint32_t size_extrafield_global,
+                         const char *comment, int method, int level) {
+    (void)extrafield_local; (void)size_extrafield_local;
+    (void)extrafield_global; (void)size_extrafield_global;
+    (void)comment;
+    zip_internal *z = (zip_internal *)file;
+    if (!z || z->in_file) return ZIP_PARAMERROR;
 
-static zip_current_file *get_current(zipFile file) {
-    static zip_current_file cf;
-    return &cf;
-}
+    central_dir_entry *e = calloc(1, sizeof(central_dir_entry));
+    if (!e) return ZIP_INTERNALERROR;
+    e->filename = strdup(filename);
+    e->filename_len = (uint16_t)strlen(filename);
+    e->offset = (uint32_t)ftell(z->fp);
+    e->method = (method == 0) ? 0 : 8;
+    e->flag = 0;
 
-int zipOpenNewFileInZip(zipFile file, const char *filename, const zip_fileinfo *zipfi,
-                          const void *extrafield_local, uInt size_extrafield_local,
-                          const void *extrafield_global, uInt size_extrafield_global,
-                          const char *comment, int method, int level) {
-    zip_internal *zi = (zip_internal *)file;
-    zip_current_file *cf = get_current(file);
-    if (cf->in_opened_file) return ZIP_PARAMERROR;
-    memset(cf, 0, sizeof(*cf));
-    cf->in_opened_file = 1;
-    cf->method = method;
-    cf->level = level;
-    strncpy(cf->filename, filename ?: "", sizeof(cf->filename)-1);
-    cf->filename_len = (uInt)strlen(cf->filename);
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
     if (zipfi) {
-        cf->dosDate = zipfi->dosDate;
-        cf->externalFa = zipfi->externalFa;
-        cf->internalFa = zipfi->internalFa;
+        e->mod_time = dos_time(& (struct tm){.tm_sec=zipfi->tmz_date.tm_sec, .tm_min=zipfi->tmz_date.tm_min, .tm_hour=zipfi->tmz_date.tm_hour, .tm_mday=zipfi->tmz_date.tm_mday, .tm_mon=zipfi->tmz_date.tm_mon-1, .tm_year=zipfi->tmz_date.tm_year-1900});
+        e->mod_date = e->mod_time;
+        e->mod_time = dos_time(& (struct tm){.tm_sec=zipfi->tmz_date.tm_sec, .tm_min=zipfi->tmz_date.tm_min, .tm_hour=zipfi->tmz_date.tm_hour});
+    } else {
+        e->mod_time = dos_time(t);
+        e->mod_date = dos_date(t);
     }
-    cf->pos_local_header = ZTELL(zi->filefunc, zi->filestream);
 
-    put_uint32((FILE *)zi->filestream, LOCAL_HEADER_MAGIC);
-    put_uint16((FILE *)zi->filestream, VERSION_NEEDED);
-    put_uint16((FILE *)zi->filestream, 0);
-    put_uint16((FILE *)zi->filestream, (uInt)method);
-    put_uint16((FILE *)zi->filestream, 0);
-    put_uint16((FILE *)zi->filestream, 0);
-    put_uint32((FILE *)zi->filestream, 0);
-    put_uint32((FILE *)zi->filestream, 0);
-    put_uint32((FILE *)zi->filestream, 0);
-    put_uint16((FILE *)zi->filestream, cf->filename_len);
-    put_uint16((FILE *)zi->filestream, size_extrafield_local);
-    fwrite(cf->filename, 1, cf->filename_len, (FILE *)zi->filestream);
-    if (extrafield_local && size_extrafield_local > 0)
-        fwrite(extrafield_local, 1, size_extrafield_local, (FILE *)zi->filestream);
+    /* Write local file header (with placeholder sizes/crc) */
+    write_le32(z->fp, LOCAL_HEADER_MAGIC);
+    write_le16(z->fp, VERSION_NEEDED);
+    write_le16(z->fp, e->flag);
+    write_le16(z->fp, e->method);
+    write_le16(z->fp, e->mod_time);
+    write_le16(z->fp, e->mod_date);
+    write_le32(z->fp, 0); /* crc placeholder */
+    write_le32(z->fp, 0); /* comp size placeholder */
+    write_le32(z->fp, 0); /* uncomp size placeholder */
+    write_le16(z->fp, e->filename_len);
+    write_le16(z->fp, 0); /* extra len */
+    fwrite(filename, 1, e->filename_len, z->fp);
 
-    if (method == Z_DEFLATED) {
-        cf->stream.zalloc = Z_NULL;
-        cf->stream.zfree = Z_NULL;
-        cf->stream.opaque = Z_NULL;
-        deflateInit2(&cf->stream, level, Z_DEFLATED, -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY);
+    /* Init deflate */
+    if (e->method == 8) {
+        memset(&z->zstr, 0, sizeof(z->zstr));
+        if (deflateInit2(&z->zstr, level ? level : Z_DEFAULT_COMPRESSION, Z_DEFLATED, -MAX_WBITS, 8, Z_DEFAULT_STRATEGY) != Z_OK) {
+            free(e->filename); free(e);
+            return ZIP_INTERNALERROR;
+        }
+        z->zstr_init = 1;
     }
-    cf->crc = crc32(0L, Z_NULL, 0);
+    z->crc = crc32(0L, Z_NULL, 0);
+    z->cur_entry = e;
+    z->in_file = 1;
     return ZIP_OK;
 }
 
-int zipWriteInFileInZip(zipFile file, const void *buf, unsigned len) {
-    zip_internal *zi = (zip_internal *)file;
-    zip_current_file *cf = get_current(file);
-    if (!cf->in_opened_file) return ZIP_PARAMERROR;
-    if (len == 0) return ZIP_OK;
-    cf->crc = crc32(cf->crc, (const Bytef *)buf, len);
-    cf->uncompressed_size += len;
-    if (cf->method == Z_DEFLATED) {
-        Bytef buffer[16384];
-        cf->stream.next_in = (Bytef *)buf;
-        cf->stream.avail_in = len;
+int zipWriteInFileInZip(zipFile file, const void *buf, uint32_t len) {
+    zip_internal *z = (zip_internal *)file;
+    if (!z || !z->in_file) return ZIP_PARAMERROR;
+    z->cur_entry->uncomp_size += len;
+    z->crc = crc32(z->crc, (const Bytef *)buf, len);
+
+    if (z->cur_entry->method == 8) {
+        z->zstr.next_in = (Bytef *)buf;
+        z->zstr.avail_in = len;
         do {
-            cf->stream.next_out = buffer;
-            cf->stream.avail_out = sizeof(buffer);
-            deflate(&cf->stream, Z_NO_FLUSH);
-            uInt written = sizeof(buffer) - cf->stream.avail_out;
-            if (written > 0) {
-                fwrite(buffer, 1, written, (FILE *)zi->filestream);
-                cf->compressed_size += written;
-            }
-        } while (cf->stream.avail_in > 0);
+            z->zstr.next_out = z->comp_buf;
+            z->zstr.avail_out = z->comp_buf_size;
+            deflate(&z->zstr, Z_NO_FLUSH);
+            uint32_t have = z->comp_buf_size - z->zstr.avail_out;
+            if (have) { fwrite(z->comp_buf, 1, have, z->fp); z->cur_entry->comp_size += have; }
+        } while (z->zstr.avail_in > 0);
     } else {
-        fwrite(buf, 1, len, (FILE *)zi->filestream);
-        cf->compressed_size += len;
+        fwrite(buf, 1, len, z->fp);
+        z->cur_entry->comp_size += len;
     }
     return ZIP_OK;
 }
 
 int zipCloseFileInZip(zipFile file) {
-    zip_internal *zi = (zip_internal *)file;
-    zip_current_file *cf = get_current(file);
-    if (!cf->in_opened_file) return ZIP_PARAMERROR;
-    if (cf->method == Z_DEFLATED) {
-        Bytef buffer[16384];
-        int err;
+    zip_internal *z = (zip_internal *)file;
+    if (!z || !z->in_file) return ZIP_PARAMERROR;
+    central_dir_entry *e = z->cur_entry;
+
+    if (e->method == 8 && z->zstr_init) {
+        int ret;
         do {
-            cf->stream.next_out = buffer;
-            cf->stream.avail_out = sizeof(buffer);
-            err = deflate(&cf->stream, Z_FINISH);
-            uInt written = sizeof(buffer) - cf->stream.avail_out;
-            if (written > 0) {
-                fwrite(buffer, 1, written, (FILE *)zi->filestream);
-                cf->compressed_size += written;
-            }
-        } while (err != Z_STREAM_END);
-        deflateEnd(&cf->stream);
+            z->zstr.next_out = z->comp_buf;
+            z->zstr.avail_out = z->comp_buf_size;
+            ret = deflate(&z->zstr, Z_FINISH);
+            uint32_t have = z->comp_buf_size - z->zstr.avail_out;
+            if (have) { fwrite(z->comp_buf, 1, have, z->fp); e->comp_size += have; }
+        } while (ret != Z_STREAM_END);
+        deflateEnd(&z->zstr);
+        z->zstr_init = 0;
     }
 
-    uLong pos_after_data = ZTELL(zi->filefunc, zi->filestream);
-    ZSEEK(zi->filefunc, zi->filestream, cf->pos_local_header + 14, ZLIB_FILEFUNC_SEEK_SET);
-    put_uint32((FILE *)zi->filestream, cf->crc);
-    put_uint32((FILE *)zi->filestream, cf->compressed_size);
-    put_uint32((FILE *)zi->filestream, cf->uncompressed_size);
-    ZSEEK(zi->filefunc, zi->filestream, pos_after_data, ZLIB_FILEFUNC_SEEK_SET);
+    e->crc32 = z->crc;
 
-    uLong central_pos = ZTELL(zi->filefunc, zi->filestream);
-    uLong needed = 46 + cf->filename_len;
-    if (zi->central_array.gap + needed > zi->central_array.size_array) {
-        zi->central_array.size_array *= 2;
-        zi->central_array.pData = realloc(zi->central_array.pData, zi->central_array.size_array);
-    }
-    char *p = zi->central_array.pData + zi->central_array.gap;
-    uInt32 magic = CENTRAL_HEADER_MAGIC;
-    memcpy(p, &magic, 4); p += 4;
-    uInt16 vmade = VERSION_MADEBY; memcpy(p, &vmade, 2); p += 2;
-    uInt16 vneed = VERSION_NEEDED; memcpy(p, &vneed, 2); p += 2;
-    uInt16 flag = 0; memcpy(p, &flag, 2); p += 2;
-    uInt16 meth = (uInt16)cf->method; memcpy(p, &meth, 2); p += 2;
-    uInt16 tmod = 0; memcpy(p, &tmod, 2); p += 2;
-    uInt16 dmod = 0; memcpy(p, &dmod, 2); p += 2;
-    uInt32 crc = cf->crc; memcpy(p, &crc, 4); p += 4;
-    uInt32 csize = cf->compressed_size; memcpy(p, &csize, 4); p += 4;
-    uInt32 usize = cf->uncompressed_size; memcpy(p, &usize, 4); p += 4;
-    uInt16 fnlen = cf->filename_len; memcpy(p, &fnlen, 2); p += 2;
-    uInt16 eflen = 0; memcpy(p, &eflen, 2); p += 2;
-    uInt16 cmlen = 0; memcpy(p, &cmlen, 2); p += 2;
-    uInt16 dsk = 0; memcpy(p, &dsk, 2); p += 2;
-    uInt16 ifa = (uInt16)cf->internalFa; memcpy(p, &ifa, 2); p += 2;
-    uInt32 efa = cf->externalFa; memcpy(p, &efa, 4); p += 4;
-    uInt32 lho = cf->pos_local_header; memcpy(p, &lho, 4); p += 4;
-    memcpy(p, cf->filename, cf->filename_len); p += cf->filename_len;
-    zi->central_array.gap += needed;
+    /* Patch local header */
+    long cur = ftell(z->fp);
+    fseek(z->fp, e->offset + 14, SEEK_SET);
+    write_le32(z->fp, e->crc32);
+    write_le32(z->fp, e->comp_size);
+    write_le32(z->fp, e->uncomp_size);
+    fseek(z->fp, cur, SEEK_SET);
 
-    zi->number_entry++;
-    cf->in_opened_file = 0;
+    /* Add to linked list */
+    e->next = NULL;
+    if (z->entries) z->last_entry->next = e;
+    else z->entries = e;
+    z->last_entry = e;
+    z->num_entries++;
+    z->in_file = 0;
+    z->cur_entry = NULL;
     return ZIP_OK;
 }
 
 int zipClose(zipFile file, const char *global_comment) {
-    zip_internal *zi = (zip_internal *)file;
-    if (!zi) return ZIP_PARAMERROR;
-    zip_current_file *cf = get_current(file);
-    if (cf->in_opened_file) zipCloseFileInZip(file);
+    zip_internal *z = (zip_internal *)file;
+    if (!z) return ZIP_PARAMERROR;
+    if (z->in_file) zipCloseFileInZip(file);
 
-    uLong central_offset = ZTELL(zi->filefunc, zi->filestream);
-    fwrite(zi->central_array.pData, 1, zi->central_array.gap, (FILE *)zi->filestream);
-    uLong central_size = zi->central_array.gap;
+    z->cd_offset = (uint32_t)ftell(z->fp);
 
-    uInt comment_len = global_comment ? (uInt)strlen(global_comment) : 0;
-    put_uint32((FILE *)zi->filestream, END_CENTRAL_MAGIC);
-    put_uint16((FILE *)zi->filestream, 0);
-    put_uint16((FILE *)zi->filestream, 0);
-    put_uint16((FILE *)zi->filestream, (uInt)zi->number_entry);
-    put_uint16((FILE *)zi->filestream, (uInt)zi->number_entry);
-    put_uint32((FILE *)zi->filestream, central_size);
-    put_uint32((FILE *)zi->filestream, central_offset);
-    put_uint16((FILE *)zi->filestream, comment_len);
-    if (global_comment) fwrite(global_comment, 1, comment_len, (FILE *)zi->filestream);
+    /* Write central directory */
+    central_dir_entry *e = z->entries;
+    while (e) {
+        write_le32(z->fp, CENTRAL_HEADER_MAGIC);
+        write_le16(z->fp, VERSION_MADEBY);
+        write_le16(z->fp, VERSION_NEEDED);
+        write_le16(z->fp, e->flag);
+        write_le16(z->fp, e->method);
+        write_le16(z->fp, e->mod_time);
+        write_le16(z->fp, e->mod_date);
+        write_le32(z->fp, e->crc32);
+        write_le32(z->fp, e->comp_size);
+        write_le32(z->fp, e->uncomp_size);
+        write_le16(z->fp, e->filename_len);
+        write_le16(z->fp, 0); /* extra */
+        write_le16(z->fp, 0); /* comment */
+        write_le16(z->fp, 0); /* disk num */
+        write_le16(z->fp, 0); /* internal attrs */
+        write_le32(z->fp, 0); /* external attrs */
+        write_le32(z->fp, e->offset);
+        fwrite(e->filename, 1, e->filename_len, z->fp);
+        e = e->next;
+    }
 
-    ZCLOSE(zi->filefunc, zi->filestream);
-    free(zi->central_array.pData);
-    free(zi);
+    uint32_t cd_size = (uint32_t)ftell(z->fp) - z->cd_offset;
+    uint16_t gc_len = global_comment ? (uint16_t)strlen(global_comment) : 0;
+
+    /* End of central directory */
+    write_le32(z->fp, END_CENTRAL_MAGIC);
+    write_le16(z->fp, 0); /* disk */
+    write_le16(z->fp, 0); /* cd disk */
+    write_le16(z->fp, z->num_entries);
+    write_le16(z->fp, z->num_entries);
+    write_le32(z->fp, cd_size);
+    write_le32(z->fp, z->cd_offset);
+    write_le16(z->fp, gc_len);
+    if (global_comment) fwrite(global_comment, 1, gc_len, z->fp);
+
+    fclose(z->fp);
+    e = z->entries;
+    while (e) { central_dir_entry *n = e->next; free(e->filename); free(e); e = n; }
+    free(z->comp_buf);
+    free(z);
     return ZIP_OK;
 }
