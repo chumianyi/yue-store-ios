@@ -64,7 +64,7 @@
     NSMutableString *info = [NSMutableString string];
     if (app.version && ![app.version isEqualToString:@"--"]) [info appendFormat:@"v%@  ", app.version];
     if (app.size && ![app.size isEqualToString:@"--"]) [info appendString:app.size];
-    if (app.signed) [info appendString:@"  已签名"];
+    if (app.isSigned) [info appendString:@"  已签名"];
     self.sizeLabel.text = info;
 
     if (app.name.length > 0) {
