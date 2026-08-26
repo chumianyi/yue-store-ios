@@ -2,6 +2,10 @@
 #import "StarFieldView.h"
 #import "LiquidGlassTabBarController.h"
 
+@interface SceneDelegate ()
+@property (nonatomic, strong) StarFieldView *starField;
+@end
+
 @implementation SceneDelegate
 
 - (void)scene:(UIScene *)scene willConnectToSession:(UISceneSession *)session options:(UISceneConnectionOptions *)connectionOptions {
@@ -9,17 +13,23 @@
     self.window = [[UIWindow alloc] initWithWindowScene:windowScene];
     self.window.frame = windowScene.coordinateSpace.bounds;
 
-    StarFieldView *starField = [[StarFieldView alloc] initWithFrame:self.window.bounds];
-    starField.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    [self.window addSubview:starField];
-
     LiquidGlassTabBarController *tabBarController = [[LiquidGlassTabBarController alloc] init];
-    [self.window addSubview:tabBarController.view];
-    tabBarController.view.frame = self.window.bounds;
-    tabBarController.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    tabBarController.view.backgroundColor = [UIColor clearColor];
+    // Force view load
+    [tabBarController view];
 
+    // Add star field as background (at index 0, behind everything)
+    self.starField = [[StarFieldView alloc] initWithFrame:tabBarController.view.bounds];
+    self.starField.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    [tabBarController.view insertSubview:self.starField atIndex:0];
+
+    self.window.rootViewController = tabBarController;
     [self.window makeKeyAndVisible];
 }
+
+- (void)sceneDidDisconnect:(UIScene *)scene {}
+- (void)sceneDidBecomeActive:(UIScene *)scene {}
+- (void)sceneWillResignActive:(UIScene *)scene {}
+- (void)sceneWillEnterForeground:(UIScene *)scene {}
+- (void)sceneDidEnterBackground:(UIScene *)scene {}
 
 @end
